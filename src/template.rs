@@ -5,13 +5,6 @@ use std::path::Path;
 
 static CONFIG_PATH: &str = "/Users/matt/workspace/wksp/.wksp";
 
-#[derive(Debug)]
-pub struct Workspace {
-  template: Template,
-  folders: Vec<Folder>,
-  files: Vec<String>,
-}
-
 #[derive(Debug, Deserialize)]
 struct Template {
   folders: Option<Vec<Folder>>,
@@ -24,19 +17,18 @@ struct Folder {
   template: Option<Template>,
 }
 
+#[derive(Debug)]
+pub struct Workspace(Template);
+
 impl Workspace {
   pub fn new(template_file: &str) -> Workspace {
-    Workspace {
-      template: Template::new(template_file),
-      folders: Vec::<Folder>::new(),
-      files: Vec::<String>::new(),
-    }
+    Workspace(Template::new(template_file))
   }
 
   pub fn build(&self) {
     let mut folder_paths = Vec::<String>::new();
     let mut file_paths = Vec::<String>::new();
-    self.template.compile(&mut folder_paths, &mut file_paths);
+    self.0.compile(&mut folder_paths, &mut file_paths);
 
     self.create_folders(&folder_paths);
     self.create_files(&file_paths);
