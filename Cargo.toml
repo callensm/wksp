@@ -3,6 +3,10 @@ name = "wksp"
 version = "1.0.0"
 authors = ["Matthew Callens <callensmatt@gmail.com>"]
 edition = "2018"
+exclude = ["examples/*", "tests/*"]
+readme = "README.md"
+license = "MIT"
+keywords = ["cli", "workspaces", "workflow", "templates"]
 
 [dependencies]
 clap = "2.32.0"
