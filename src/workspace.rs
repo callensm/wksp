@@ -5,22 +5,32 @@ use super::logger;
 use super::template::Template;
 
 #[derive(Debug)]
-pub struct Workspace(Template, String);
+pub struct Workspace {
+  template: Template,
+  file_name: String,
+  root: String,
+}
 
 impl Workspace {
-  pub fn new(template_file: &str, home: &str) -> Workspace {
-    Workspace(Template::new(template_file, home), template_file.to_owned())
+  pub fn new(template_file: &str, home: &str, root: &str) -> Workspace {
+    Workspace {
+      template: Template::new(template_file, home),
+      file_name: template_file.to_owned(),
+      root: root.to_owned(),
+    }
   }
 
   pub fn build(&self) {
     let mut folder_paths = Vec::<String>::new();
     let mut file_paths = Vec::<String>::new();
-    self.0.compile(&mut folder_paths, &mut file_paths);
+    self
+      .template
+      .compile(&self.root, &mut folder_paths, &mut file_paths);
 
     self.create_folders(&folder_paths);
     self.create_files(&file_paths);
 
-    logger::successful_build(&self.1);
+    logger::successful_build(&self.file_name);
   }
 
   fn create_folders(&self, folders: &Vec<String>) {
