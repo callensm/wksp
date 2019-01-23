@@ -1,7 +1,27 @@
 use serde_json;
+use std::convert::From;
 use std::env::current_dir;
 use std::fs::File;
+use std::io;
 use std::path::Path;
+
+#[derive(Debug)]
+pub enum TemplateError {
+  JsonError(serde_json::Error),
+  ReadError(io::Error),
+}
+
+impl From<serde_json::Error> for TemplateError {
+  fn from(e: serde_json::Error) -> Self {
+    TemplateError::JsonError(e)
+  }
+}
+
+impl From<io::Error> for TemplateError {
+  fn from(e: io::Error) -> Self {
+    TemplateError::ReadError(e)
+  }
+}
 
 #[derive(Debug, Deserialize)]
 struct Folder {
@@ -16,12 +36,12 @@ pub struct Template {
 }
 
 impl Template {
-  pub fn new(file: &str, config_path: &str) -> Template {
+  pub fn new(file: &str, config_path: &str) -> Result<Template, TemplateError> {
     let config: String = format!("{}/{}.json", config_path, file);
     let path = Path::new(&config);
 
-    let template_file = File::open(path).expect("Template file not found.");
-    serde_json::from_reader(template_file).expect("Error reading template file.")
+    let template_file = File::open(path)?;
+    Ok(serde_json::from_reader(template_file)?)
   }
 
   pub fn compile(&self, root: &str, folders: &mut Vec<String>, files: &mut Vec<String>) {

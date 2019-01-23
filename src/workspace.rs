@@ -2,7 +2,7 @@ use std::fs::{create_dir_all, File};
 use std::path::Path;
 
 use super::logger;
-use super::template::Template;
+use super::template::{Template, TemplateError};
 
 #[derive(Debug)]
 pub struct Workspace {
@@ -12,12 +12,14 @@ pub struct Workspace {
 }
 
 impl Workspace {
-  pub fn new(template_file: &str, home: &str, root: &str) -> Workspace {
-    Workspace {
-      template: Template::new(template_file, home),
+  pub fn new(template_file: &str, home: &str, root: &str) -> Result<Workspace, TemplateError> {
+    let template = Template::new(template_file, home)?;
+
+    Ok(Workspace {
+      template: template,
       file_name: template_file.to_owned(),
       root: root.to_owned(),
-    }
+    })
   }
 
   pub fn build(&self) {

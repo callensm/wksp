@@ -36,3 +36,12 @@ pub fn failed_build(item_t: ItemType, name: &str) {
     Yellow.bold().underline().paint(name)
   );
 }
+
+pub fn error(text: &str, file_name: &str) {
+  eprintln!(
+    "{} {} {}",
+    Red.bold().paint("[Error]"),
+    White.bold().paint(text),
+    Blue.bold().paint(file_name),
+  );
+}

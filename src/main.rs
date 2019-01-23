@@ -14,11 +14,13 @@ extern crate serde_json;
 
 mod logger;
 mod template;
+use self::template::TemplateError;
 mod workspace;
 use self::workspace::Workspace;
 
 use clap::{App, Arg};
 use dirs::home_dir;
+use std::process::exit;
 
 fn main() {
   let home: String = config_home();
@@ -53,7 +55,20 @@ fn main() {
     template_name = template_parts.first().unwrap();
   }
 
-  let wksp = Workspace::new(template_name, &home, &workspace_name);
+  let wksp = match Workspace::new(template_name, &home, &workspace_name) {
+    Ok(w) => w,
+    Err(e) => match e {
+      TemplateError::ReadError(_) => {
+        logger::error("Could not find template file:", template_name);
+        exit(1);
+      }
+      TemplateError::JsonError(_) => {
+        logger::error("Failed to parse the contents of template:", template_name);
+        exit(1);
+      }
+    },
+  };
+
   wksp.build();
 }
 
