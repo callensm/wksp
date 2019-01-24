@@ -25,7 +25,7 @@ fn main() {
   let home: String = config_home();
 
   let matches = App::new("wksp")
-    .version("1.0.0")
+    .version("1.1.0")
     .author("Matthew Callens <callensmatt@gmail.com>")
     .about("Use or create templates to spawn new project workspaces")
     .subcommand(
