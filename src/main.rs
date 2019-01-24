@@ -5,6 +5,7 @@
 extern crate ansi_term;
 extern crate clap;
 extern crate dirs;
+extern crate open;
 
 #[macro_use]
 extern crate serde_derive;
@@ -12,15 +13,13 @@ extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
 
+mod handlers;
 mod logger;
 mod template;
-use self::template::TemplateError;
 mod workspace;
-use self::workspace::Workspace;
 
-use clap::{App, Arg};
+use clap::{App, Arg, SubCommand};
 use dirs::home_dir;
-use std::process::exit;
 
 fn main() {
   let home: String = config_home();
@@ -28,48 +27,67 @@ fn main() {
   let matches = App::new("wksp")
     .version("1.0.0")
     .author("Matthew Callens <callensmatt@gmail.com>")
-    .about("Use templates to create new project workspaces")
-    .arg(
-      Arg::with_name("template")
-        .short("t")
-        .long("template")
-        .value_name("FILE")
-        .takes_value(true)
-        .help("the name of the template to build from"),
+    .about("Use or create templates to spawn new project workspaces")
+    .subcommand(
+      SubCommand::with_name("create")
+        .about("create a new workspace from an existing template")
+        .arg(
+          Arg::with_name("template")
+            .short("t")
+            .long("template")
+            .value_name("FILE")
+            .takes_value(true)
+            .help("the name of the template to build from"),
+        )
+        .arg(
+          Arg::with_name("name")
+            .short("n")
+            .long("name")
+            .value_name("WKSP_NAME")
+            .takes_value(true)
+            .help("name of the new workspace"),
+        ),
     )
-    .arg(
-      Arg::with_name("name")
-        .short("n")
-        .long("name")
-        .value_name("WKSP_NAME")
-        .takes_value(true)
-        .help("name of the new workspace"),
+    .subcommand(
+      SubCommand::with_name("new")
+        .about("write a new template file")
+        .arg(
+          Arg::with_name("name")
+            .short("n")
+            .long("name")
+            .value_name("FILE")
+            .takes_value(true)
+            .help("name of the new template file"),
+        ),
     )
     .get_matches();
 
-  let workspace_name = matches.value_of("name").unwrap_or("new_wksp");
-  let mut template_name: &str = matches.value_of("template").unwrap_or("template.json");
+  match matches.subcommand() {
+    ("create", Some(sub)) => {
+      let workspace_name = sub.value_of("name").unwrap_or("new_wksp");
+      let mut template_name: &str = sub.value_of("template").unwrap_or("template.json");
 
-  if template_name.ends_with("json") {
-    let template_parts: Vec<&str> = template_name.split(".").collect();
-    template_name = template_parts.first().unwrap();
+      if template_name.ends_with("json") {
+        let template_parts: Vec<&str> = template_name.split(".").collect();
+        template_name = template_parts.first().unwrap();
+      }
+
+      handlers::create_handler(&workspace_name, &template_name, &home);
+    }
+    ("new", Some(sub)) => {
+      let mut template_name: &str = sub.value_of("name").unwrap_or("new_template.json");
+
+      if template_name.ends_with("json") {
+        let template_parts: Vec<&str> = template_name.split(".").collect();
+        template_name = template_parts.first().unwrap();
+      }
+
+      handlers::new_handler(&template_name, &home);
+    }
+    _ => {
+      logger::unknown("");
+    }
   }
-
-  let wksp = match Workspace::new(template_name, &home, &workspace_name) {
-    Ok(w) => w,
-    Err(e) => match e {
-      TemplateError::ReadError(_) => {
-        logger::error("Could not find template file:", template_name);
-        exit(1);
-      }
-      TemplateError::JsonError(_) => {
-        logger::error("Failed to parse the contents of template:", template_name);
-        exit(1);
-      }
-    },
-  };
-
-  wksp.build();
 }
 
 fn config_home() -> String {

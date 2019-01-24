@@ -47,7 +47,7 @@ impl Workspace {
   fn create_files(&self, files: &Vec<String>) {
     for f in files {
       match File::create(Path::new(f)) {
-        Ok(_new_file) => continue,
+        Ok(_file) => continue,
         Err(_e) => logger::failed_build(logger::ItemType::File, f),
       }
     }

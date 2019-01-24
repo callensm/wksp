@@ -45,3 +45,11 @@ pub fn error(text: &str, file_name: &str) {
     Blue.bold().paint(file_name),
   );
 }
+
+pub fn unknown(text: &str) {
+  eprintln!(
+    "{} {}",
+    Red.bold().paint("[Error]"),
+    White.bold().paint(text),
+  );
+}
